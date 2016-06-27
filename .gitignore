@@ -3,3 +3,5 @@
 ################################################################################
 
 /shadowsocks-csharp/bin/x86
+/shadowsocks-csharp/obj/x86
+/packages
