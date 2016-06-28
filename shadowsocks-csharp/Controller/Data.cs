@@ -14,7 +14,7 @@ namespace Shadowsocks.Controller
         private static readonly List<string> Urls = new List<string>
         {
             "http://www.ishadowsocks.net",
-            "http://i.freevpnss.com"
+            //"http://i.freevpnss.com"
         };
 
         public static int StartIndex { get; } = 1;
@@ -22,40 +22,6 @@ namespace Shadowsocks.Controller
         public static int Add { get; } = 12;
 
         public static int EndIndex { get; } = 27;
-
-        public Data()
-        {
-           
-        }
-
-        public static string SplitSenior(string str)
-        {
-            return str.Split(':')[1].Trim();
-        }
-
-
-        public static string[] GetData(Tuple<string, string, string> html)
-        {
-            var z = html.Item1.Split(new[] { html.Item2, html.Item3 }, StringSplitOptions.RemoveEmptyEntries); //取密码
-            return z;
-        }
-
-
-        public static List<Tuple<string, string, string>> GetHtml_Utf8(List<string> url)
-        {
-            var wc = new System.Net.WebClient();
-            wc.Encoding = Encoding.UTF8;
-            var rel = new List<Tuple<string, string, string>>();
-            foreach (var val in url)
-            {
-                var str = wc.DownloadString(val);
-                var en = Encoding.UTF8.GetString(Encoding.Default.GetBytes(str));
-                rel.Add(new Tuple<string, string, string>(en, "<h4>", "</h4>"));
-            }
-            return rel;
-        }
-
-
         public static void GetData()
         {
             var rel = GetHtml_Utf8(Urls);
@@ -76,9 +42,37 @@ namespace Shadowsocks.Controller
                     });
                 }
             }
-            ShadowsocksController s = new ShadowsocksController();
-            Configuration c = new Configuration();
+            var s = new ShadowsocksController();
+            var c = new Configuration();
             s.SaveServers(servers, c.localPort);
         }
+
+        public static List<Tuple<string, string, string>> GetHtml_Utf8(List<string> url)
+        {
+            var wc = new System.Net.WebClient();
+            wc.Encoding = Encoding.UTF8;
+            var rel = new List<Tuple<string, string, string>>();
+            foreach (var val in url)
+            {
+                var str = wc.DownloadString(val);
+                var en = Encoding.UTF8.GetString(Encoding.Default.GetBytes(str));
+                rel.Add(new Tuple<string, string, string>(en, "<h4>", "</h4>"));
+            }
+            return rel;
+        }
+
+        public static string[] GetData(Tuple<string, string, string> html)
+        {
+            var z = html.Item1.Split(new[] { html.Item2, html.Item3 }, StringSplitOptions.RemoveEmptyEntries); //取密码
+            return z;
+        }
+
+        public static string SplitSenior(string str)
+        {
+            return str.Split(':')[1].Trim();
+        }
+
+
+
     }
 }
