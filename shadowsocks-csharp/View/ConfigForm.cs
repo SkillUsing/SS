@@ -342,7 +342,7 @@ namespace Shadowsocks.View
         /// <summary>
         /// Bug 不打开编辑窗口不会执行.
         /// </summary>
-        private void timer1_Tick(object sender, EventArgs e)
+        private  void timer1_Tick(object sender, EventArgs e)
         {
             var x = Data.GetData();
             var server = controller.GetCurrentServer();
