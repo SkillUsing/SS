@@ -54,51 +54,8 @@ namespace Shadowsocks
                 ShadowsocksController controller = new ShadowsocksController();
                 MenuViewController viewController = new MenuViewController(controller);
                 controller.Start();
-                StartTimer();
                 Application.Run();
             }
         }
-
-
-        private static void StartTimer()
-        {
-            System.Timers.Timer aTimer = new System.Timers.Timer();
-            aTimer.Elapsed += OnTimedEvent;
-            aTimer.Interval = 600000;
-            aTimer.Enabled = true;
-            GC.KeepAlive(aTimer);
-        }
-
-        private static void OnTimedEvent(object source, ElapsedEventArgs e)
-        {
-            var x = Data.GetData();
-            var controller = new ShadowsocksController();
-            var modifiedConfiguration = new Configuration();
-
-            GetExcellentServer(x, controller, modifiedConfiguration);
-
-
-            var server = controller.GetCurrentServer();
-            controller.SaveServers(modifiedConfiguration.configs, modifiedConfiguration.localPort);
-            controller.SelectServerIndex(modifiedConfiguration.configs.IndexOf(server));
-        }
-
-        private static Server GetExcellentServer(List<Server> servers, ShadowsocksController controller, Configuration modifiedConfiguration)
-        {
-
-            var timeout = 10;
-            var options = new PingOptions();
-            options.DontFragment = true;
-            var reply = new Ping().Send("www.google.com", timeout);
-            if (reply != null && reply.Status == IPStatus.Success)
-            {
-                Console.WriteLine($"==============================================");
-                Console.WriteLine($"答复的主机地址：{reply.Address}");
-                Console.WriteLine($"往返时间：{reply.RoundtripTime}");
-                Console.WriteLine($"生存时间：{reply.Options.Ttl}");
-            }
-            return servers[0];
-        }
-
     }
 }
