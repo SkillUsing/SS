@@ -344,6 +344,7 @@ namespace Shadowsocks.View
                 i++;
             }
             int strategyCount = i;
+            //选择服务器事件获得.
             Configuration configuration = controller.GetConfigurationCopy();
             foreach (var server in configuration.configs)
             {

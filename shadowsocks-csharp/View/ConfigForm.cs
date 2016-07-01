@@ -339,9 +339,27 @@ namespace Shadowsocks.View
             }
         }
 
+        /// <summary>
+        /// Bug 不打开编辑窗口不会执行.
+        /// </summary>
         private void timer1_Tick(object sender, EventArgs e)
         {
-            Data.GetData();
+            var x = Data.GetData();
+            var server = controller.GetCurrentServer();
+            if (!SaveOldSelectedServer())
+            {
+                return;
+            }
+            if (_modifiedConfiguration.configs.Count == 0)
+            {
+                MessageBox.Show(I18N.GetString("Please add at least one server"));
+                return;
+            }
+            controller.SaveServers(_modifiedConfiguration.configs, _modifiedConfiguration.localPort);
+
+            controller.SelectServerIndex(_modifiedConfiguration.configs.IndexOf(server));
+
+            // controller.SelectServerIndex(_modifiedConfiguration.configs.IndexOf(x[2]));
         }
     }
 }

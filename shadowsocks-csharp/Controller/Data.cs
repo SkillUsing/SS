@@ -2,15 +2,12 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using Shadowsocks.Model;
 
 namespace Shadowsocks.Controller
 {
-    internal enum Label
-    {
-        H4 = 0,
-        P = 1,
-    }
+
 
     /// <summary>
     /// By Lc
@@ -26,43 +23,55 @@ namespace Shadowsocks.Controller
         private static readonly List<string> Urls = new List<string>
         {
             "http://www.ishadowsocks.net",
-            //"http://i.freevpnss.com"
+            "http://i.freevpnss.com"
         };
 
-        public static List<Tuple<string, string, string>> GetHtml_Utf8(List<string> url)
+        public static List<Tuple<string, string>> GetHtml_Utf8(List<string> url)
         {
             var wc = new System.Net.WebClient { Encoding = Encoding.UTF8 };
-            var rel = new List<Tuple<string, string, string>>();
-            foreach (var val in url)
+            return (from val in url let valback = val let str = wc.DownloadString(val) select valback.Contains("www.ishadowsocks.net") ? new Tuple<string, string>(str, "h4") : new Tuple<string, string>(str, "p")).ToList();
+        }
+
+        public static string[] GetData(Tuple<string, string> html)
+        {
+            string[] rel;
+            switch (html.Item2)
             {
-                var str = wc.DownloadString(val);
-                var en = Encoding.UTF8.GetString(Encoding.Default.GetBytes(str));
-                rel.Add(new Tuple<string, string, string>(en, "<h4>", "</h4>"));
+                case "h4":
+                    rel = html.Item1.Split(new[] { "<h4>", "</h4>" }, StringSplitOptions.RemoveEmptyEntries);
+                    break;
+                case "p":
+                    var test = html.Item1.Split(new[] { "<h1>免费SS帐号-每12小时更换一次密码</h1>" }, StringSplitOptions.RemoveEmptyEntries);
+                    rel = test.Length > 0 ? test[1].Split(new[] { "<p>", "</p>" }, StringSplitOptions.RemoveEmptyEntries) : null;
+                    break;
+                default:
+                    rel = null;
+                    break;
             }
             return rel;
         }
 
-        public static string SplitSenior(string str)
-        {
-            return str.Split(':')[1].Trim();
-        }
-
-        public static string[] GetData(Tuple<string, string, string> html)
-        {
-            var z = html.Item1.Split(new[] { html.Item2, html.Item3 }, StringSplitOptions.RemoveEmptyEntries); //取密码
-            return z;
-        }
-
-        public static void GetData()
+        public static List<Server> GetData()
         {
             var rel = GetHtml_Utf8(Urls);
-            var data = rel.Select(GetData).ToList();
+
+            var data = rel.Select(GetData).Where(relData => relData != null).ToList();
+
             var servers = new List<Server>();
+
+            var adds = 0;
+
+            var counter = 0;
+
             foreach (var val in data)
             {
-                for (var i = StartIndex; i < EndIndex; i = i + Add)
+                if (counter != 0)
                 {
-                    servers.Add(new Server
+                    adds = -2;
+                }
+                for (var i = StartIndex; i < EndIndex; i = i + Add + adds)
+                {
+                    var server = new Server
                     {
                         server = SplitSenior(val[i]),
                         server_port = int.Parse(SplitSenior(val[i + 2])),
@@ -70,12 +79,37 @@ namespace Shadowsocks.Controller
                         password = SplitSenior(val[i + 4]),
                         remarks = "",
                         auth = false
-                    });
+                    };
+                    if (string.IsNullOrWhiteSpace(server.password))
+                    {
+                        continue;
+                    }
+                    servers.Add(server);
                 }
+                counter++;
             }
             var s = new ShadowsocksController();
             var c = new Configuration();
             s.SaveServers(servers, c.localPort);
+            return servers;
+        }
+
+        public static string SplitSenior(string str)
+        {
+            var rel = "";
+            var extract = false;
+            foreach (var item in str)
+            {
+                if (extract)
+                {
+                    rel += item;
+                }
+                if (item == ':' || item == '：')
+                {
+                    extract = true;
+                }
+            }
+            return rel;
         }
     }
 }
