@@ -75,7 +75,7 @@ namespace Shadowsocks
             var controller = new ShadowsocksController();
             var modifiedConfiguration = new Configuration();
 
-            GeteExcellentServer(x, controller, modifiedConfiguration);
+            GetExcellentServer(x, controller, modifiedConfiguration);
 
 
             var server = controller.GetCurrentServer();
