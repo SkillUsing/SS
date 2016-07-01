@@ -23,15 +23,11 @@ namespace Shadowsocks.Controller
 
         public static int EndIndex { get; } = 27;
 
-
         private static readonly List<string> Urls = new List<string>
         {
             "http://www.ishadowsocks.net",
             //"http://i.freevpnss.com"
         };
-
-
-
 
         public static List<Tuple<string, string, string>> GetHtml_Utf8(List<string> url)
         {
@@ -46,23 +42,16 @@ namespace Shadowsocks.Controller
             return rel;
         }
 
-
-
-
         public static string SplitSenior(string str)
         {
             return str.Split(':')[1].Trim();
         }
-
 
         public static string[] GetData(Tuple<string, string, string> html)
         {
             var z = html.Item1.Split(new[] { html.Item2, html.Item3 }, StringSplitOptions.RemoveEmptyEntries); //取密码
             return z;
         }
-
-
-
 
         public static void GetData()
         {
