@@ -92,6 +92,7 @@ namespace Shadowsocks.View
                 _isStartupChecking = true;
                 updateChecker.CheckUpdate(config, 3000);
             }
+            ShowConfigForm();
         }
 
         void controller_Errored(object sender, System.IO.ErrorEventArgs e)

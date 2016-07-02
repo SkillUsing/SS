@@ -5,6 +5,9 @@ using System.Drawing;
 using System.Text;
 using System.Windows.Forms;
 using System.Diagnostics;
+using System.Linq;
+using System.Net.NetworkInformation;
+using System.Windows.Documents;
 using Microsoft.Win32;
 using Shadowsocks.Controller;
 using Shadowsocks.Model;
@@ -19,6 +22,11 @@ namespace Shadowsocks.View
         // this is a copy of configuration that we are working on
         private Configuration _modifiedConfiguration;
         private int _lastSelectedIndex = -1;
+
+        public ConfigForm()
+        {
+
+        }
 
         public ConfigForm(ShadowsocksController controller)
         {
@@ -69,7 +77,7 @@ namespace Shadowsocks.View
             IPTextBox.Focus();
         }
 
-        private bool SaveOldSelectedServer()
+        public bool SaveOldSelectedServer()
         {
             try
             {
@@ -345,6 +353,12 @@ namespace Shadowsocks.View
         private void timer1_Tick(object sender, EventArgs e)
         {
             var x = Data.GetData();
+            GetExcellentServer(x);
+        }
+
+
+        public void SaveData()
+        {
             var server = controller.GetCurrentServer();
             if (!SaveOldSelectedServer())
             {
@@ -359,8 +373,34 @@ namespace Shadowsocks.View
             controller.SaveServers(_modifiedConfiguration.configs, _modifiedConfiguration.localPort);
 
             controller.SelectServerIndex(_modifiedConfiguration.configs.IndexOf(server));
+        }
 
-            // controller.SelectServerIndex(_modifiedConfiguration.configs.IndexOf(x[2]));
+        private void GetExcellentServer(List<Server> servers)
+        {
+            var rel = new List<Tuple<Server, long, bool>>();
+            foreach (var server in servers)
+            {
+                controller.SelectServerIndex(_modifiedConfiguration.configs.IndexOf(server));
+                var timeout = 10000;
+                var options = new PingOptions { DontFragment = true };
+                var reply = new Ping().Send("www.google.com", timeout);
+                if (reply != null && reply.Status == IPStatus.Success)
+                {
+                    Debug.WriteLine($"==============================================");
+                    Debug.WriteLine($"答复的主机地址：{reply.Address}");
+                    Debug.WriteLine($"往返时间：{reply.RoundtripTime}");
+                    Debug.WriteLine($"生存时间：{reply.Options.Ttl}");
+                    rel.Add(new Tuple<Server, long, bool>(server, reply.RoundtripTime, true));
+                }
+                else
+                {
+                    Debug.WriteLine($"未成功!");
+                    rel.Add(new Tuple<Server, long, bool>(server, 0, false));
+                }
+            }
+            var sv = rel.Where(c => !c.Item3).Min(c => c.Item2);
+            var ser = rel.FirstOrDefault(c => c.Item2 == sv);
+            if (ser != null) controller.SelectServerIndex(_modifiedConfiguration.configs.IndexOf(ser.Item1));
         }
     }
 }

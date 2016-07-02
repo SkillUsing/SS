@@ -1,10 +1,14 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Net.NetworkInformation;
 using System.Threading;
+using System.Timers;
 using System.Windows.Forms;
 
 using Shadowsocks.Controller;
+using Shadowsocks.Model;
 using Shadowsocks.Util;
 using Shadowsocks.View;
 
@@ -29,7 +33,6 @@ namespace Shadowsocks
                     Process[] oldProcesses = Process.GetProcessesByName("Shadowsocks");
                     if (oldProcesses.Length > 0)
                     {
-                        Process oldProcess = oldProcesses[0];
                     }
                     MessageBox.Show(I18N.GetString("Find Shadowsocks icon in your notify tray.") + "\n" +
                         I18N.GetString("If you want to start multiple Shadowsocks, make a copy in another directory."),
@@ -54,7 +57,5 @@ namespace Shadowsocks
                 Application.Run();
             }
         }
-
-
     }
 }
