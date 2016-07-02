@@ -353,6 +353,7 @@ namespace Shadowsocks.View
             if (_modifiedConfiguration.configs.Count == 0)
             {
                 MessageBox.Show(I18N.GetString("Please add at least one server"));
+
                 return;
             }
             controller.SaveServers(_modifiedConfiguration.configs, _modifiedConfiguration.localPort);
