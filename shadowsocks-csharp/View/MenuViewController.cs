@@ -92,6 +92,8 @@ namespace Shadowsocks.View
                 _isStartupChecking = true;
                 updateChecker.CheckUpdate(config, 3000);
             }
+
+            controller.ToggleEnable(true);
             ShowConfigForm();
         }
 
