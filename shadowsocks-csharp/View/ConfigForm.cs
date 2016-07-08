@@ -146,10 +146,6 @@ namespace Shadowsocks.View
             LoadSelectedServer();
         }
 
-        private void ConfigForm_Load(object sender, EventArgs e)
-        {
-            TimerFunction();
-        }
 
         private void ConfigForm_KeyDown(object sender, KeyEventArgs e)
         {
@@ -340,77 +336,6 @@ namespace Shadowsocks.View
                 OneTimeAuth.Enabled = true;
             }
         }
-
-        private void timer1_Tick(object sender, EventArgs e)
-        {
-            TimerFunction();
-        }
-
-        public void TimerFunction()
-        {
-            var servers = new Data().GetData();
-            controller.SaveServers(servers, controller.GetCurrentConfiguration().localPort);
-            controller.SelectServerIndex(0);
-            GetExcellentServer(servers);
-        }
-
-        private void GetExcellentServer(List<Server> servers)
-        {
-            var config = controller.GetCurrentConfiguration();
-            var list = new List<ServerResponseTime>();
-            var over = 0;
-            foreach (var server in servers)
-            {
-                controller.SelectServerIndex(config.configs.IndexOf(server));
-                Task.Factory.StartNew(() =>
-                {
-                    try
-                    {
-                        var x = DateTime.Now;
-                        var myRequest = System.Net.WebRequest.Create("http://www.google.com");
-                        myRequest.Timeout = 5000;
-                        myRequest.Method = "GET";
-                        myRequest.GetResponse();
-                        var y = DateTime.Now;
-                        Debug.WriteLine($"服务器：{server.server}可以使用;响应时间为：{y - x}");
-                        list.Add(new ServerResponseTime()
-                        {
-                            Server = server,
-                            Time = y - x,
-                            Success = true
-                        });
-                    }
-                    catch
-                    {
-                        Debug.WriteLine($"服务器：{server.server}不能使用");
-                        list.Add(new ServerResponseTime()
-                        {
-                            Server = server,
-                            Success = false
-                        });
-                    }
-                    finally
-                    {
-                        over++;
-                    }
-                }).ContinueWith(task =>
-                {
-                    if (servers.Count - 1 == over)
-                    {
-                        var s = list.FirstOrDefault(c => c.Time == list.Min(m => m.Time));
-                        if (s == null) return;
-                        controller.SelectServerIndex(config.configs.IndexOf(s.Server));
-                    }
-                });
-            }
-        }
     }
-    public class ServerResponseTime
-    {
-        public Server Server { get; set; }
-
-        public TimeSpan Time { get; set; }
-
-        public bool Success { get; set; }
-    }
+ 
 }

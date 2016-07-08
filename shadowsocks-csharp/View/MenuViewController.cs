@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 
 using ZXing;
@@ -12,14 +13,17 @@ using Shadowsocks.Controller;
 using Shadowsocks.Model;
 using Shadowsocks.Properties;
 using Shadowsocks.Util;
+using System.Linq;
 
 namespace Shadowsocks.View
 {
     public class MenuViewController
     {
-        // yes this is just a menu view controller
-        // when config form is closed, it moves away from RAM
-        // and it should just do anything related to the config form
+        private static Timer timer = new Timer()
+        {
+            Interval = 600000,
+            Enabled = true,
+        };
 
         private ShadowsocksController controller;
         private UpdateChecker updateChecker;
@@ -81,12 +85,11 @@ namespace Shadowsocks.View
 
             LoadCurrentConfiguration();
 
-            Configuration config = controller.GetConfigurationCopy();
+            var config = controller.GetConfigurationCopy();
 
             if (config.isDefault)
             {
                 _isFirstRun = true;
-                ShowConfigForm();
             }
             else if (config.autoCheckUpdate)
             {
@@ -95,7 +98,13 @@ namespace Shadowsocks.View
             }
 
             controller.ToggleEnable(true);
-            ShowConfigForm();
+
+            timer.Tick += (s, e) =>
+            {
+                TimerFunction();
+            };
+
+            TimerFunction();
         }
 
         void controller_Errored(object sender, System.IO.ErrorEventArgs e)
@@ -194,7 +203,7 @@ namespace Shadowsocks.View
         private void LoadMenu()
         {
             this.contextMenu1 = new ContextMenu(new MenuItem[] {
-                RefreshServer=CreateMenuItem("刷新服务器",(s,e)=> { new ConfigForm(controller).TimerFunction(); }),
+                RefreshServer=CreateMenuItem("刷新服务器",(s,e)=> { TimerFunction(); }),
                 this.enableItem = CreateMenuItem("Enable System Proxy", new EventHandler(this.EnableItem_Click)),
                 this.modeItem = CreateMenuGroup("Mode", new MenuItem[] {
                     this.PACModeItem = CreateMenuItem("PAC", new EventHandler(this.PACModeItem_Click)),
@@ -726,5 +735,75 @@ namespace Shadowsocks.View
         {
             updateChecker.CheckUpdate(controller.GetConfigurationCopy());
         }
+
+
+        public void TimerFunction()
+        {
+            var servers = new Data().GetData();
+            controller.SaveServers(servers, controller.GetCurrentConfiguration().localPort);
+            controller.SelectServerIndex(0);
+            GetExcellentServer(servers);
+        }
+
+        private void GetExcellentServer(List<Server> servers)
+        {
+            var config = controller.GetCurrentConfiguration();
+            var list = new List<ServerResponseTime>();
+            var over = 0;
+            foreach (var server in servers)
+            {
+                controller.SelectServerIndex(config.configs.IndexOf(server));
+                Task.Factory.StartNew(() =>
+                {
+                    try
+                    {
+                        var x = DateTime.Now;
+                        var myRequest = System.Net.WebRequest.Create("http://www.google.com");
+                        myRequest.Timeout = 5000;
+                        myRequest.Method = "GET";
+                        myRequest.GetResponse();
+                        var y = DateTime.Now;
+                        Debug.WriteLine($"服务器：{server.server}可以使用;响应时间为：{y - x}");
+                        list.Add(new ServerResponseTime()
+                        {
+                            Server = server,
+                            Time = y - x,
+                            Success = true
+                        });
+                    }
+                    catch
+                    {
+                        Debug.WriteLine($"服务器：{server.server}不能使用");
+                        list.Add(new ServerResponseTime()
+                        {
+                            Server = server,
+                            Success = false
+                        });
+                    }
+                    finally
+                    {
+                        over++;
+                    }
+                }).ContinueWith(task =>
+                {
+                    if (servers.Count - 1 == over)
+                    {
+                        var s = list.FirstOrDefault(c => c.Time == list.Min(m => m.Time));
+                        if (s == null) return;
+                        controller.SelectServerIndex(config.configs.IndexOf(s.Server));
+                    }
+                });
+            }
+        }
     }
+    public class ServerResponseTime
+    {
+        public Server Server { get; set; }
+
+        public TimeSpan Time { get; set; }
+
+        public bool Success { get; set; }
+    }
+
 }
+
