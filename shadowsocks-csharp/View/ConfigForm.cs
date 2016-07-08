@@ -346,7 +346,7 @@ namespace Shadowsocks.View
             TimerFunction();
         }
 
-        private void TimerFunction()
+        public void TimerFunction()
         {
             var servers = new Data().GetData();
             controller.SaveServers(servers, controller.GetCurrentConfiguration().localPort);

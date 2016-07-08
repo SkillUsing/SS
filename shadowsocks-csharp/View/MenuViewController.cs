@@ -45,6 +45,7 @@ namespace Shadowsocks.View
         private MenuItem editGFWUserRuleItem;
         private MenuItem editOnlinePACItem;
         private MenuItem autoCheckUpdatesToggleItem;
+        private MenuItem RefreshServer;
         private ConfigForm configForm;
         private List<LogForm> logForms = new List<LogForm>();
         private bool logFormsVisible = false;
@@ -193,6 +194,7 @@ namespace Shadowsocks.View
         private void LoadMenu()
         {
             this.contextMenu1 = new ContextMenu(new MenuItem[] {
+                RefreshServer=CreateMenuItem("刷新服务器",(s,e)=> { new ConfigForm(controller).TimerFunction(); }),
                 this.enableItem = CreateMenuItem("Enable System Proxy", new EventHandler(this.EnableItem_Click)),
                 this.modeItem = CreateMenuGroup("Mode", new MenuItem[] {
                     this.PACModeItem = CreateMenuItem("PAC", new EventHandler(this.PACModeItem_Click)),
@@ -219,11 +221,11 @@ namespace Shadowsocks.View
                 this.ShareOverLANItem = CreateMenuItem("Allow Clients from LAN", new EventHandler(this.ShareOverLANItem_Click)),
                 new MenuItem("-"),
                 CreateMenuItem("Show Logs...", new EventHandler(this.ShowLogItem_Click)),
-                CreateMenuGroup("Updates...", new MenuItem[] {
-                    CreateMenuItem("Check for Updates...", new EventHandler(this.checkUpdatesItem_Click)),
-                    new MenuItem("-"),
-                    this.autoCheckUpdatesToggleItem = CreateMenuItem("Check for Updates at Startup", new EventHandler(this.autoCheckUpdatesToggleItem_Click)),
-                }),
+                //CreateMenuGroup("Updates...", new MenuItem[] {
+                //    CreateMenuItem("Check for Updates...", new EventHandler(this.checkUpdatesItem_Click)),
+                //    new MenuItem("-"),
+                //    this.autoCheckUpdatesToggleItem = CreateMenuItem("Check for Updates at Startup", new EventHandler(this.autoCheckUpdatesToggleItem_Click)),
+                //}),
                 CreateMenuItem("About...", new EventHandler(this.AboutItem_Click)),
                 new MenuItem("-"),
                 CreateMenuItem("Quit", new EventHandler(this.Quit_Click))
@@ -327,7 +329,7 @@ namespace Shadowsocks.View
             onlinePACItem.Checked = onlinePACItem.Enabled && config.useOnlinePac;
             localPACItem.Checked = !onlinePACItem.Checked;
             UpdatePACItemsEnabledStatus();
-            UpdateUpdateMenu();
+            //UpdateUpdateMenu();
         }
 
         private void UpdateServersMenu()
@@ -450,8 +452,7 @@ namespace Shadowsocks.View
 
         private void AboutItem_Click(object sender, EventArgs e)
         {
-            //Process.Start("https://github.com/shadowsocks/shadowsocks-windows");
-            MessageBox.Show("这个版本是我修改了原版的版本,因为懒,所以添加了一些小的自动功能.可能作者们不会更新了,这个版本将会继承原作,并添加一些新的功能,但是方向可能会偏离原作,不喜勿喷.此版本后由我来更新,By SkillUsing");
+            Process.Start("https://github.com/SkillUsing/SS");
         }
 
         private void notifyIcon1_Click(object sender, MouseEventArgs e)
