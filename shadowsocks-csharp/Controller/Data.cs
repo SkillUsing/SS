@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Text;
 using Shadowsocks.Model;
 
@@ -25,8 +26,10 @@ namespace Shadowsocks.Controller
 
         public List<Tuple<string, string>> GetHtml_Utf8(List<string> url)
         {
-            var wc = new System.Net.WebClient { Encoding = Encoding.UTF8 };
-            return (from val in url let valback = val let str = wc.DownloadString(val) select valback.Contains("www.ishadowsocks.net") ? new Tuple<string, string>(str, "h4") : new Tuple<string, string>(str, "p")).ToList();
+            using (var wc = new WebClient() { Encoding = Encoding.UTF8 })
+            {
+                return (from val in url let valback = val let str = wc.DownloadString(val) select valback.Contains("www.ishadowsocks.net") ? new Tuple<string, string>(str, "h4") : new Tuple<string, string>(str, "p")).ToList();
+            }
         }
 
         public string[] GetData(Tuple<string, string> html)
