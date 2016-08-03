@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Net;
 using System.Text;
@@ -28,7 +29,17 @@ namespace Shadowsocks.Controller
         {
             using (var wc = new WebClient() { Encoding = Encoding.UTF8 })
             {
-                return (from val in url let valback = val let str = wc.DownloadString(val) select valback.Contains("www.ishadowsocks.net") ? new Tuple<string, string>(str, "h4") : new Tuple<string, string>(str, "p")).ToList();
+                List<Tuple<string, string>> list = new List<Tuple<string, string>>();
+                foreach (var val in url)
+                {
+                    var pingResult = CmdPing(val);
+                    if (pingResult == "连接")
+                    {
+                        string str = wc.DownloadString(val);
+                        list.Add(val.Contains("www.ishadowsocks.net") ? new Tuple<string, string>(str, "h4") : new Tuple<string, string>(str, "p"));
+                    }
+                }
+                return list;
             }
         }
 
@@ -106,6 +117,44 @@ namespace Shadowsocks.Controller
                 }
             }
             return rel;
+        }
+
+
+        private static string CmdPing(string strIp)
+        {
+
+            Process p = new Process(); p.StartInfo.FileName = "cmd.exe";//设定程序名
+            p.StartInfo.UseShellExecute = false; //关闭Shell的使用
+            p.StartInfo.RedirectStandardInput = true;//重定向标准输入
+            p.StartInfo.RedirectStandardOutput = true;//重定向标准输出
+            p.StartInfo.RedirectStandardError = true;//重定向错误输出
+            p.StartInfo.CreateNoWindow = true;//设置不显示窗口
+            string pingrst; p.Start(); p.StandardInput.WriteLine("ping " + strIp);
+            p.StandardInput.WriteLine("exit");
+            string strRst = p.StandardOutput.ReadToEnd();
+
+            if (strRst.IndexOf("(0% loss)") != -1)
+            {
+                pingrst = "连接";
+            }
+            else if (strRst.IndexOf("Destination host unreachable.") != -1)
+            {
+                pingrst = "无法到达目的主机";
+            }
+            else if (strRst.IndexOf("Request timed out.") != -1)
+            {
+                pingrst = "超时";
+            }
+            else if (strRst.IndexOf("Unknown host") != -1)
+            {
+                pingrst = "无法解析主机";
+            }
+            else
+            {
+                pingrst = strRst;
+            }
+            p.Close();
+            return pingrst;
         }
     }
 }
