@@ -83,6 +83,7 @@ namespace Shadowsocks.View
             this.updateChecker = new UpdateChecker();
             updateChecker.CheckUpdateCompleted += updateChecker_CheckUpdateCompleted;
 
+
             LoadCurrentConfiguration();
 
             var config = controller.GetConfigurationCopy();
@@ -100,8 +101,6 @@ namespace Shadowsocks.View
             controller.ToggleEnable(true);
 
 
-
-
             timer.Tick += (s, e) =>
             {
                 TimerFunction();
@@ -109,7 +108,9 @@ namespace Shadowsocks.View
 
             TimerFunction();
 
-            
+
+
+
 
         }
 
@@ -750,7 +751,7 @@ namespace Shadowsocks.View
             controller.SelectStrategy("com.shadowsocks.strategy.ha");
         }
 
-     
+
     }
 }
 

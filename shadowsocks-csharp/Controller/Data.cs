@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Net;
 using System.Text;
@@ -21,25 +20,15 @@ namespace Shadowsocks.Controller
 
         private readonly List<string> _urls = new List<string>
         {
-            "http://www.ishadowsocks.net",
-            "http://i.freevpnss.com"
+            "www.ishadowsocks.net",
+            "i.freevpnss.com"
         };
 
         public List<Tuple<string, string>> GetHtml_Utf8(List<string> url)
         {
             using (var wc = new WebClient() { Encoding = Encoding.UTF8 })
             {
-                List<Tuple<string, string>> list = new List<Tuple<string, string>>();
-                foreach (var val in url)
-                {
-                    var pingResult = CmdPing(val);
-                    if (pingResult == "连接")
-                    {
-                        string str = wc.DownloadString(val);
-                        list.Add(val.Contains("www.ishadowsocks.net") ? new Tuple<string, string>(str, "h4") : new Tuple<string, string>(str, "p"));
-                    }
-                }
-                return list;
+                return (from val in url let ipResult = GetIpByHostName(val) let pingResult = Ping(ipResult) where pingResult let str = wc.DownloadString("http://" + val) select val.Contains("www.ishadowsocks.net") ? new Tuple<string, string>(str, "h4") : new Tuple<string, string>(str, "p")).ToList();
             }
         }
 
@@ -120,41 +109,40 @@ namespace Shadowsocks.Controller
         }
 
 
-        private static string CmdPing(string strIp)
+        /// <summary>  
+        /// 根据主机名（域名）获得主机的IP地址  
+        /// </summary>  
+        /// <param name="hostName">主机名或域名</param>  
+        /// <example> GetIPByDomain("www.google.com");</example>  
+        /// <returns>主机的IP地址</returns>  
+        public string GetIpByHostName(string hostName)
         {
+            hostName = hostName.Trim();
+            if (hostName == string.Empty)
+                return string.Empty;
+            try
+            {
+                var host = Dns.GetHostEntry(hostName);
+                return host.AddressList.GetValue(0).ToString();
+            }
+            catch (Exception)
+            {
+                return string.Empty;
+            }
+        }
 
-            Process p = new Process(); p.StartInfo.FileName = "cmd.exe";//设定程序名
-            p.StartInfo.UseShellExecute = false; //关闭Shell的使用
-            p.StartInfo.RedirectStandardInput = true;//重定向标准输入
-            p.StartInfo.RedirectStandardOutput = true;//重定向标准输出
-            p.StartInfo.RedirectStandardError = true;//重定向错误输出
-            p.StartInfo.CreateNoWindow = true;//设置不显示窗口
-            string pingrst; p.Start(); p.StandardInput.WriteLine("ping " + strIp);
-            p.StandardInput.WriteLine("exit");
-            string strRst = p.StandardOutput.ReadToEnd();
-
-            if (strRst.IndexOf("(0% loss)") != -1)
+        public bool Ping(string ip)
+        {
+            var p = new System.Net.NetworkInformation.Ping();
+            var options = new System.Net.NetworkInformation.PingOptions
             {
-                pingrst = "连接";
-            }
-            else if (strRst.IndexOf("Destination host unreachable.") != -1)
-            {
-                pingrst = "无法到达目的主机";
-            }
-            else if (strRst.IndexOf("Request timed out.") != -1)
-            {
-                pingrst = "超时";
-            }
-            else if (strRst.IndexOf("Unknown host") != -1)
-            {
-                pingrst = "无法解析主机";
-            }
-            else
-            {
-                pingrst = strRst;
-            }
-            p.Close();
-            return pingrst;
+                DontFragment = true
+            };
+            const string data = "Test Data!";
+            var buffer = Encoding.ASCII.GetBytes(data);
+            const int timeout = 1000;
+            var reply = p.Send(ip, timeout, buffer, options);
+            return reply != null && reply.Status == System.Net.NetworkInformation.IPStatus.Success;
         }
     }
 }
