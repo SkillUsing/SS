@@ -98,7 +98,7 @@ namespace Shadowsocks.View
                 updateChecker.CheckUpdate(config, 3000);
             }
 
-            controller.ToggleEnable(true);
+          
 
 
             timer.Tick += (s, e) =>
@@ -747,6 +747,8 @@ namespace Shadowsocks.View
         public void TimerFunction()
         {
             var servers = new Data().GetData();
+            if (servers == null || servers.Count == 0) return;
+            controller.ToggleEnable(true);
             controller.SaveServers(servers, controller.GetCurrentConfiguration().localPort);
             controller.SelectStrategy("com.shadowsocks.strategy.ha");
         }

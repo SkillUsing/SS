@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Net;
 using System.Text;
@@ -20,15 +21,35 @@ namespace Shadowsocks.Controller
 
         private readonly List<string> _urls = new List<string>
         {
-            "www.ishadowsocks.net",
-            "i.freevpnss.com"
+            "http://www.ishadowsocks.org",
+            "http://i.freevpnss.com"
         };
 
         public List<Tuple<string, string>> GetHtml_Utf8(List<string> url)
         {
             using (var wc = new WebClient() { Encoding = Encoding.UTF8 })
             {
-                return (from val in url let ipResult = GetIpByHostName(val) let pingResult = Ping(ipResult) where pingResult let str = wc.DownloadString("http://" + val) select val.Contains("www.ishadowsocks.net") ? new Tuple<string, string>(str, "h4") : new Tuple<string, string>(str, "p")).ToList();
+                var result = new List<Tuple<string, string>>();
+                foreach (var val in url)
+                {
+                    try
+                    {
+                        var htmlStr = wc.DownloadString(val);
+                        if (htmlStr.Trim() != "" && val.Contains("ishadowsocks"))
+                        {
+                            result.Add(new Tuple<string, string>(htmlStr, "h4"));
+                        }
+                        else if (htmlStr.Trim() != "")
+                        {
+                            result.Add(new Tuple<string, string>(htmlStr, "p"));
+                        }
+                    }
+                    catch
+                    {
+                        Debug.WriteLine("下载失败!");
+                    }
+                }
+                return result;
             }
         }
 
