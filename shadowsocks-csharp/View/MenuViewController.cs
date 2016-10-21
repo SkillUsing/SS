@@ -103,7 +103,8 @@ namespace Shadowsocks.View
 
             timer.Tick += (s, e) =>
             {
-                TimerFunction();
+                //provisional Over
+                //TimerFunction();
             };
 
             TimerFunction();
