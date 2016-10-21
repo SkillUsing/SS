@@ -1,5 +1,6 @@
 # SS
 小飞机...
+In the upgrade, the suspension of the use of...
 # New function
 
 # SS Instructions
