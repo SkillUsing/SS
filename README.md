@@ -1,11 +1,1 @@
-# SS
-小飞机...
-# New function
-
-# SS Instructions
-
-DwonLoad -> Double-click
-
-# DownLoad
-http://pan.baidu.com/s/1pLGkNSv 
-
+# 项目废弃。
